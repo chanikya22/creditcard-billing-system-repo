@@ -1,0 +1,3 @@
+storage_account: stccbillingdata
+container: billing
+pdf_path: pdfs/
