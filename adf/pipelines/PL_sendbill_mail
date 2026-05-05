@@ -1,0 +1,79 @@
+{
+    "name": "PL_sendbill_mail",
+    "properties": {
+        "activities": [
+            {
+                "name": "Lookupbill",
+                "type": "Lookup",
+                "dependsOn": [],
+                "policy": {
+                    "timeout": "0.12:00:00",
+                    "retry": 0,
+                    "retryIntervalInSeconds": 30,
+                    "secureOutput": false,
+                    "secureInput": false
+                },
+                "userProperties": [],
+                "typeProperties": {
+                    "source": {
+                        "type": "AzureSqlSource",
+                        "sqlReaderQuery": {
+                            "value": "SELECT \n    b.bill_id,\n    b.card_id,\n    c.full_name,\n    c.email,\n    CONCAT('bill_', b.bill_id, '_', b.card_id, '.pdf') AS file_name\nFROM bills b\nJOIN cards cd ON b.card_id = cd.card_id\nJOIN customers c ON cd.customer_id = c.customer_id",
+                            "type": "Expression"
+                        },
+                        "queryTimeout": "02:00:00",
+                        "partitionOption": "None"
+                    },
+                    "dataset": {
+                        "referenceName": "ds_bills_lookup",
+                        "type": "DatasetReference"
+                    },
+                    "firstRowOnly": false
+                }
+            },
+            {
+                "name": "ForEach1",
+                "type": "ForEach",
+                "dependsOn": [
+                    {
+                        "activity": "Lookupbill",
+                        "dependencyConditions": [
+                            "Succeeded"
+                        ]
+                    }
+                ],
+                "userProperties": [],
+                "typeProperties": {
+                    "items": {
+                        "value": "@activity('Lookupbill').output.value",
+                        "type": "Expression"
+                    },
+                    "activities": [
+                        {
+                            "name": "Web1",
+                            "type": "WebActivity",
+                            "dependsOn": [],
+                            "policy": {
+                                "timeout": "0.12:00:00",
+                                "retry": 0,
+                                "retryIntervalInSeconds": 30,
+                                "secureOutput": false,
+                                "secureInput": false
+                            },
+                            "userProperties": [],
+                            "typeProperties": {
+                                "method": "POST",
+                                "url": "https://prod-17.centralindia.logic.azure.com:443/workflows/9643e931f8254c9182a3801ec1f48b20/triggers/When_an_HTTP_request_is_received/paths/invoke?api-version=2016-10-01&sp=%2Ftriggers%2FWhen_an_HTTP_request_is_received%2Frun&sv=1.0&sig=mKtSGdbEtVcz4dT1wT-F_NXUW8YbxgBN5rx7tlF8wMY",
+                                "body": {
+                                    "value": "{\n  \"email\": \"@{item().email}\",\n  \"name\": \"@{item().full_name}\",\n  \"bill_id\": \"@{item().bill_id}\",\n  \"card_id\": \"@{item().card_id}\",\n  \"file_name\": \"@{item().file_name}\"\n}",
+                                    "type": "Expression"
+                                }
+                            }
+                        }
+                    ]
+                }
+            }
+        ],
+        "annotations": []
+    }
+}
