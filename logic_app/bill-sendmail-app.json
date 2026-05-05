@@ -1,0 +1,97 @@
+{
+    "definition": {
+        "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+        "contentVersion": "1.0.0.0",
+        "triggers": {
+            "When_an_HTTP_request_is_received": {
+                "type": "Request",
+                "kind": "Http",
+                "inputs": {
+                    "schema": {
+                        "email": "test@gmail.com",
+                        "name": "Rahul Sharma",
+                        "bill_id": 76,
+                        "card_id": 120,
+                        "file_name": "bill_76_120.pdf"
+                    }
+                }
+            }
+        },
+        "actions": {
+            "Get_blob_content_(V2)": {
+                "type": "ApiConnection",
+                "inputs": {
+                    "host": {
+                        "connection": {
+                            "name": "@parameters('$connections')['azureblob']['connectionId']"
+                        }
+                    },
+                    "method": "get",
+                    "path": "/v2/datasets/@{encodeURIComponent(encodeURIComponent('AccountNameFromSettings'))}/files/@{encodeURIComponent(encodeURIComponent('billing/pdfs/',triggerBody()?['file_name']))}/content",
+                    "queries": {
+                        "inferContentType": true
+                    }
+                },
+                "runAfter": {},
+                "metadata": {
+                    "JTJmYmlsbGluZyUyZnBkZnMlMmZiaWxsXzc2XzEyMC5wZGY=": "/billing/pdfs/bill_76_120.pdf"
+                }
+            },
+            "Send_an_email_(V2)": {
+                "type": "ApiConnection",
+                "inputs": {
+                    "host": {
+                        "connection": {
+                            "name": "@parameters('$connections')['outlook']['connectionId']"
+                        }
+                    },
+                    "method": "post",
+                    "body": {
+                        "To": "@{triggerBody()?['email']}",
+                        "Subject": "Your Credit Card Bill - @{triggerBody()?['bill_id']}",
+                        "Body": "<p class=\"editor-paragraph\">Dear @{triggerBody()?['name']},&lt;br&gt;&lt;br&gt;<br><br>Your credit card bill has been generated.&lt;br&gt;<br>Please find the attached statement.&lt;br&gt;&lt;br&gt;<br>this customers mailid is @{triggerBody()?['email']}&lt;br&gt;&lt;br&gt;</p><p class=\"editor-paragraph\"><br>Regards,&lt;br&gt;<br>Billing Team,&lt;br&gt;</p><p class=\"editor-paragraph\">ABDC BANK</p>",
+                        "Attachments": [
+                            {
+                                "Name": "bill_@{triggerBody()?['bill_id']}.pdf",
+                                "ContentBytes": "@base64(body('Get_blob_content_(V2)'))"
+                            }
+                        ],
+                        "Importance": "Normal"
+                    },
+                    "path": "/v2/Mail"
+                },
+                "runAfter": {
+                    "Get_blob_content_(V2)": [
+                        "Succeeded"
+                    ]
+                }
+            }
+        },
+        "outputs": {},
+        "parameters": {
+            "$connections": {
+                "type": "Object",
+                "defaultValue": {}
+            }
+        }
+    },
+    "parameters": {
+        "$connections": {
+            "type": "Object",
+            "value": {
+                "azureblob": {
+                    "id": "/subscriptions/a2515198-b92c-4695-b23e-a142a3d0d760/providers/Microsoft.Web/locations/centralindia/managedApis/azureblob",
+                    "connectionId": "/subscriptions/a2515198-b92c-4695-b23e-a142a3d0d760/resourceGroups/rg-creditcard-billing-dev/providers/Microsoft.Web/connections/azureblob",
+                    "connectionName": "azureblob",
+                    "connectionProperties": {}
+                },
+                "outlook": {
+                    "id": "/subscriptions/a2515198-b92c-4695-b23e-a142a3d0d760/providers/Microsoft.Web/locations/centralindia/managedApis/outlook",
+                    "connectionId": "/subscriptions/a2515198-b92c-4695-b23e-a142a3d0d760/resourceGroups/rg-creditcard-billing-dev/providers/Microsoft.Web/connections/outlook",
+                    "connectionName": "outlook",
+                    "connectionProperties": {}
+                }
+            }
+        }
+    }
+}
