@@ -6,7 +6,7 @@ This project implements an end-to-end credit card billing system using Azure ser
 ---
 
 ## 🏗️ Architecture
-![Architecture](docs/architecture_diagram.png)
+CC_BILLING_ARCHITECTURE-DIAGRAM.png
 
 ---
 
