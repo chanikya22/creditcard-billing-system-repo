@@ -2,6 +2,8 @@ End-to-End Credit Card Billing System on Azure
 Author
 Chanikya Ladi
 Target Role: Data Engineer
+google Docs link:
+https://docs.google.com/document/d/1LI-BV59mFjhpunSYTHWtQ6mrB2438TObftrJHEykVOA/edit?pli=1&tab=t.kavagabhxnns#heading=h.j16hfqpyiuq9
 ________________________________________
 1. Abstract
 This project implements a complete credit card billing system using Azure data engineering tools. It simulates real-world banking workflows including transaction processing, monthly bill generation, PDF statement creation, and automated email delivery.
